@@ -1,11 +1,21 @@
+/* eslint-disable react-native/no-inline-styles */
 import {observer, inject} from 'mobx-react';
-import React, {useState} from 'react';
-import {Button, TextInput, Text, TouchableOpacity, View} from 'react-native';
+import React, {useState, useRef} from 'react';
+import {
+  Button,
+  TextInput,
+  Text,
+  TouchableOpacity,
+  View,
+  ScrollView,
+  Animated,
+  StyleSheet,
+} from 'react-native';
 
-const Home = (props) => {
+const Home = props => {
   const [todoItem, setState] = useState('');
 
-  const onChangeText = (todoItem) => {
+  const onChangeText = todoItem => {
     console.log(todoItem, '<==item');
     setState(todoItem);
   };
@@ -15,16 +25,36 @@ const Home = (props) => {
       props.store.addTodo(todoItem);
       setState('');
     }
+    fadeIn();
   };
 
-  const toggleTodo = (todo) => {
+  const toggleTodo = todo => {
     todo.toggleCompleted();
+    fadeOut();
+  };
+
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+
+  const fadeIn = () => {
+    // Will change fadeAnim value to 1 in 5 seconds
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 5000,
+    }).start();
+  };
+
+  const fadeOut = () => {
+    // Will change fadeAnim value to 0 in 5 seconds
+    Animated.timing(fadeAnim, {
+      toValue: 0,
+      duration: 5000,
+    }).start();
   };
 
   console.log('todo', props.store.todos[0]);
 
   return (
-    <>
+    <ScrollView>
       <Text
         style={{
           textAlign: 'center',
@@ -32,18 +62,18 @@ const Home = (props) => {
           color: 'green',
           margin: 20,
         }}>
-        Add an Item
+        Animated Notes
       </Text>
       <TextInput
         style={{
           padding: 10,
-          borderRadius: 5,
+          borderRadius: 25,
           elevation: 1,
           marginHorizontal: 20,
           marginBottom: 15,
         }}
         value={todoItem ? todoItem : ''}
-        onChangeText={(text) => onChangeText(text)}
+        onChangeText={text => onChangeText(text)}
       />
       <View style={{margin: 20}}>
         <Button onPress={addTodo} title={'Add'} />
@@ -54,35 +84,41 @@ const Home = (props) => {
           textDecorationLine: 'underline',
           fontSize: 16,
         }}>
-        TODO Items
+        Notes
       </Text>
-      <View
-        style={{
-          margin: 20,
-        }}>
+      <View>
         {props.store.incompleteTodos.map((todo, index) => (
-          <TouchableOpacity
-            onPress={() => toggleTodo(todo)}
+          <Animated.View
             key={index}
-            style={{
-              justifyContent: 'space-around',
-              flexDirection: 'row',
-              padding: 20,
-            }}>
-            <Text style={{fontSize: 16}}>{todo.title}</Text>
-            <Text>{todo.completed ? 'Done' : 'Incomplete'}</Text>
-          </TouchableOpacity>
+            style={[
+              styles.fadingContainer,
+              {
+                opacity: fadeAnim, // Bind opacity to animated value
+              },
+            ]}>
+            <TouchableOpacity
+              onPress={() => toggleTodo(todo)}
+              style={{
+                justifyContent: 'space-around',
+                flexDirection: 'row',
+                padding: 20,
+              }}>
+              <Text style={{fontSize: 16}}>{todo.title}</Text>
+              {/* <Text>{todo.completed ? 'Done' : 'Incomplete'}</Text> */}
+            </TouchableOpacity>
+          </Animated.View>
         ))}
       </View>
-      <Text
+
+      {/* <Text
         style={{
           textAlign: 'center',
           textDecorationLine: 'underline',
           fontSize: 16,
         }}>
         Completed Items
-      </Text>
-      <View
+      </Text> */}
+      {/* <View
         style={{
           margin: 20,
         }}>
@@ -101,9 +137,22 @@ const Home = (props) => {
             <Text>{todo.completed ? 'Done' : 'Incomplete'}</Text>
           </TouchableOpacity>
         ))}
-      </View>
-    </>
+      </View> */}
+    </ScrollView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  fadingContainer: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    backgroundColor: 'powderblue',
+  },
+});
 
 export default inject('store')(observer(Home));
